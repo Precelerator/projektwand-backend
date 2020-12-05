@@ -13,10 +13,10 @@ using System.Linq;
 
 namespace projektwand_backend
 {
-    public static class GetProjects
+    public static class GetEvents
     {
-        [FunctionName("GetProjects")]
-        public static async Task<IActionResult> RunGetProjects(
+        [FunctionName("GetEvents")]
+        public static async Task<IActionResult> RunGetEvents(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
             ILogger log)
         {
@@ -24,13 +24,13 @@ namespace projektwand_backend
 
             Response response = await FetchAllRowsAsync();
 
-            List<Project> projects = ParseToProjects(response);
+            List<Event> events = ParseToEvents(response);
 
-            return new OkObjectResult(projects);
+            return new OkObjectResult(events);
         }
 
-        [FunctionName("GetProject")]
-        public static async Task<IActionResult> RunGetProject(
+        [FunctionName("GetEvent")]
+        public static async Task<IActionResult> RunGetEvent(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
             ILogger log)
         {
@@ -38,18 +38,18 @@ namespace projektwand_backend
             var id = Convert.ToInt32(req.Query["id"]);
             Response response = await FetchRowAsync(id);
 
-            List<Project> projects = ParseToProjects(response);
+            List<Event> events = ParseToEvents(response);
 
-            return new OkObjectResult(projects.First());
+            return new OkObjectResult(events.First());
         }
 
         private static async Task<Response> FetchAllRowsAsync()
         {
             var apiKey = Environment.GetEnvironmentVariable("API_KEY");
-            var sheetId = Environment.GetEnvironmentVariable("PROJECT_SHEET_ID");
+            var sheetId = Environment.GetEnvironmentVariable("EVENT_SHEET_ID");
             var client = new RestClient("https://sheets.googleapis.com/v4");
 
-            var request = new RestRequest($"spreadsheets/{sheetId}/values/Projekte!A2:I50?key={apiKey}", DataFormat.Json);
+            var request = new RestRequest($"spreadsheets/{sheetId}/values/Events!A2:I50?key={apiKey}", DataFormat.Json);
 
             var response = await client.GetAsync<Response>(request);
 
@@ -59,7 +59,7 @@ namespace projektwand_backend
         private static async Task<Response> FetchRowAsync(int id)
         {
             var apiKey = Environment.GetEnvironmentVariable("API_KEY");
-            var sheetId = Environment.GetEnvironmentVariable("SHEET_ID");
+            var sheetId = Environment.GetEnvironmentVariable("EVENT_SHEET_ID");
             var client = new RestClient("https://sheets.googleapis.com/v4");
 
             // Google Sheet Daten beginnen ab Zeile 2
@@ -71,25 +71,23 @@ namespace projektwand_backend
             return response;
         }
 
-        private static List<Project> ParseToProjects(Response response)
+        private static List<Event> ParseToEvents(Response response)
         {
-            List<Project> projects = new List<Project>();
-            foreach (var projectValue in response.values)
+            List<Event> events = new List<Event>();
+            foreach (var eventValue in response.values)
             {
-                if (projectValue.Count != 9) continue;
-                Project p = new Project();
-                p.projektname = projectValue[0];
-                p.kurzbeschreibung = projectValue[1];
-                p.suchtNach = projectValue[3];
-                p.ausfuehrlicheBeschreibung = projectValue[4];
-                p.kategorie = projectValue[6];
-                p.kurzbeschreibungErsteller = projectValue[7];
-                p.onlineSeit = projectValue[8];
+                if (eventValue.Count != 5) continue;
+                Event p = new Event();
+                p.datum = eventValue[0];
+                p.uhrzeit = eventValue[1];
+                p.titel = eventValue[2];
+                p.beschreibung = eventValue[3];
+                p.zoomLink = eventValue[4];
 
-                projects.Add(p);
+                events.Add(p);
             }
 
-            return projects;
+            return events;
         }
     }
 }
