@@ -59,7 +59,7 @@ namespace projektwand_backend
         private static async Task<Response> FetchRowAsync(int id)
         {
             var apiKey = Environment.GetEnvironmentVariable("API_KEY");
-            var sheetId = Environment.GetEnvironmentVariable("SHEET_ID");
+            var sheetId = Environment.GetEnvironmentVariable("PROJECT_SHEET_ID");
             var client = new RestClient("https://sheets.googleapis.com/v4");
 
             // Google Sheet Daten beginnen ab Zeile 2
